@@ -38,36 +38,26 @@ class AdminController extends Controller
      */
     public function users(Request $request)
     {
-        try {
-            $users = User::withCount('notes')
-                ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
-                        'is_admin' => $user->is_admin,
-                        'notes_count' => $user->notes_count,
-                        'created_at' => $user->created_at,
-                    ];
-                });
+        $users = User::withCount('notes')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'is_admin' => $user->is_admin,
+                    'notes_count' => $user->notes_count,
+                    'created_at' => $user->created_at,
+                ];
+            });
 
-            Log::info('Admin accessed users list', [
-                'admin_id' => $request->user()->id,
-                'total_users' => $users->count(),
-            ]);
+        Log::info('Admin accessed users list', [
+            'admin_id' => $request->user()->id,
+            'total_users' => $users->count(),
+        ]);
 
-            return response()->json($users);
-        } catch (\Exception $e) {
-            Log::error('Admin users list failed', [
-                'admin_id' => $request->user()->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json($users);
     }
 
     /**
@@ -112,29 +102,18 @@ class AdminController extends Controller
      */
     public function userNotes(Request $request, $userId)
     {
-        $user = User::findOrFail($userId);
+        User::findOrFail($userId);
 
-        try {
-            $notes = Note::where('user_id', $userId)
-                ->orderBy('created_at', 'desc')
-                ->get();
+        $notes = Note::where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-            Log::info('Admin accessed user notes', [
-                'admin_id' => $request->user()->id,
-                'target_user_id' => $userId,
-                'notes_count' => $notes->count(),
-            ]);
+        Log::info('Admin accessed user notes', [
+            'admin_id' => $request->user()->id,
+            'target_user_id' => $userId,
+            'notes_count' => $notes->count(),
+        ]);
 
-            return response()->json($notes);
-        } catch (\Exception $e) {
-            Log::error('Admin user notes access failed', [
-                'admin_id' => $request->user()->id,
-                'target_user_id' => $userId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json($notes);
     }
 }

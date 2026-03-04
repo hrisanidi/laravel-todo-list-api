@@ -27,7 +27,7 @@ class NoteController extends Controller
      *                 @OA\Property(property="content", type="string", example="Milk, eggs, bread"),
      *                 @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="medium"),
      *                 @OA\Property(property="completed", type="boolean", example=false),
-     *                 @OA\Property(property="due_date", type="string", format="date", example="2024-12-31", nullable=true),
+     *                 @OA\Property(property="due_date", type="string", format="date", example="2026-01-01", nullable=true),
      *                 @OA\Property(property="tags", type="array", @OA\Items(type="string"), example={"shopping", "food"}),
      *                 @OA\Property(property="created_at", type="string", format="date-time"),
      *                 @OA\Property(property="updated_at", type="string", format="date-time")
@@ -65,7 +65,7 @@ class NoteController extends Controller
      *             @OA\Property(property="content", type="string", example="Milk, eggs, bread"),
      *             @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="medium"),
      *             @OA\Property(property="completed", type="boolean", example=false),
-     *             @OA\Property(property="due_date", type="string", format="date", example="2024-12-31", nullable=true),
+     *             @OA\Property(property="due_date", type="string", format="date", example="2026-01-01", nullable=true),
      *             @OA\Property(property="tags", type="array", @OA\Items(type="string"), example={"shopping", "food"})
      *         )
      *     ),
@@ -102,38 +102,28 @@ class NoteController extends Controller
             'tags.*' => 'string',
         ]);
 
-        try {
-            $user = $request->user();
+        $user = $request->user();
 
-            $note = Note::create([
-                'user_id' => $user->id,
-                'title' => $request->title,
-                'content' => $request->input('content'),
-                'priority' => $request->priority ?? 'medium',
-                'completed' => $request->completed ?? false,
-                'due_date' => $request->due_date,
-                'tags' => $request->tags,
-            ]);
+        $note = Note::create([
+            'user_id' => $user->id,
+            'title' => $request->title,
+            'content' => $request->input('content'),
+            'priority' => $request->priority ?? 'medium',
+            'completed' => $request->completed ?? false,
+            'due_date' => $request->due_date,
+            'tags' => $request->tags,
+        ]);
 
-            Log::info('Note created successfully', [
-                'note_id' => $note->id,
-                'user_id' => $user->id,
-                'title' => $note->title,
-            ]);
+        Log::info('Note created successfully', [
+            'note_id' => $note->id,
+            'user_id' => $user->id,
+            'title' => $note->title,
+        ]);
 
-            // Dispatch the event to notify admins
-            event(new NoteCreated($note));
+        // Dispatch the event to notify admins
+        event(new NoteCreated($note));
 
-            return response()->json($note, 201);
-        } catch (\Exception $e) {
-            Log::error('Note creation failed', [
-                'user_id' => $request->user()->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json($note, 201);
     }
 
     /**
@@ -210,7 +200,7 @@ class NoteController extends Controller
      *             @OA\Property(property="content", type="string", example="Milk, eggs, bread, butter"),
      *             @OA\Property(property="priority", type="string", enum={"low", "medium", "high"}, example="high"),
      *             @OA\Property(property="completed", type="boolean", example=true),
-     *             @OA\Property(property="due_date", type="string", format="date", example="2024-12-31", nullable=true),
+     *             @OA\Property(property="due_date", type="string", format="date", example="2026-01-01", nullable=true),
      *             @OA\Property(property="tags", type="array", @OA\Items(type="string"), example={"shopping", "urgent"})
      *         )
      *     ),
@@ -267,32 +257,21 @@ class NoteController extends Controller
             'tags.*' => 'string',
         ]);
 
-        try {
-            $note->update($request->only([
-                'title',
-                'content',
-                'priority',
-                'completed',
-                'due_date',
-                'tags',
-            ]));
+        $note->update($request->only([
+            'title',
+            'content',
+            'priority',
+            'completed',
+            'due_date',
+            'tags',
+        ]));
 
-            Log::info('Note updated successfully', [
-                'note_id' => $note->id,
-                'user_id' => $request->user()->id,
-            ]);
+        Log::info('Note updated successfully', [
+            'note_id' => $note->id,
+            'user_id' => $request->user()->id,
+        ]);
 
-            return response()->json($note);
-        } catch (\Exception $e) {
-            Log::error('Note update failed', [
-                'note_id' => $id,
-                'user_id' => $request->user()->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json($note);
     }
 
     /**
@@ -339,26 +318,15 @@ class NoteController extends Controller
             abort(403, 'Forbidden');
         }
 
-        try {
-            $note->delete();
+        $note->delete();
 
-            Log::info('Note deleted successfully', [
-                'note_id' => $id,
-                'user_id' => $request->user()->id,
-            ]);
+        Log::info('Note deleted successfully', [
+            'note_id' => $id,
+            'user_id' => $request->user()->id,
+        ]);
 
-            return response()->json([
-                'message' => 'Note deleted successfully',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Note deletion failed', [
-                'note_id' => $id,
-                'user_id' => $request->user()->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json([
+            'message' => 'Note deleted successfully',
+        ]);
     }
 }

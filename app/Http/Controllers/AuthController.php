@@ -64,45 +64,35 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        try {
-            $result = DB::transaction(function () use ($request) {
-                $user = User::create([
-                    'name' => $request->name,
-                    'email' => $request->email,
-                    'password' => Hash::make($request->password),
-                    'is_admin' => false,
-                ]);
-
-                $token = $user->createToken('auth_token')->accessToken;
-
-                return [
-                    'user' => $user,
-                    'token' => $token,
-                ];
-            });
-
-            Log::info('User registered successfully', [
-                'user_id' => $result['user']->id,
-                'email' => $result['user']->email,
-            ]);
-
-            return response()->json([
-                'user' => [
-                    'id' => $result['user']->id,
-                    'name' => $result['user']->name,
-                    'email' => $result['user']->email,
-                ],
-                'token' => $result['token'],
-            ], 201);
-        } catch (\Exception $e) {
-            Log::error('Registration failed', [
+        $result = DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->name,
                 'email' => $request->email,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'password' => Hash::make($request->password),
+                'is_admin' => false,
             ]);
 
-            throw $e;
-        }
+            $token = $user->createToken('auth_token')->accessToken;
+
+            return [
+                'user' => $user,
+                'token' => $token,
+            ];
+        });
+
+        Log::info('User registered successfully', [
+            'user_id' => $result['user']->id,
+            'email' => $result['user']->email,
+        ]);
+
+        return response()->json([
+            'user' => [
+                'id' => $result['user']->id,
+                'name' => $result['user']->name,
+                'email' => $result['user']->email,
+            ],
+            'token' => $result['token'],
+        ], 201);
     }
 
     /**
@@ -158,32 +148,22 @@ class AuthController extends Controller
             throw new AuthenticationException('Invalid credentials');
         }
 
-        try {
-            $token = $user->createToken('auth_token')->accessToken;
+        $token = $user->createToken('auth_token')->accessToken;
 
-            Log::info('User logged in successfully', [
-                'user_id' => $user->id,
+        Log::info('User logged in successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
+
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'email' => $user->email,
-            ]);
-
-            return response()->json([
-                'user' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'is_admin' => $user->is_admin,
-                ],
-                'token' => $token,
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Token creation failed during login', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+                'is_admin' => $user->is_admin,
+            ],
+            'token' => $token,
+        ]);
     }
 
     /**
@@ -247,27 +227,17 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        try {
-            $user = $request->user();
-            $token = $user->token();
-            $token->revoke();
+        $user = $request->user();
+        $token = $user->token();
+        $token->revoke();
 
-            Log::info('User logged out successfully', [
-                'user_id' => $user->id,
-                'email' => $user->email,
-            ]);
+        Log::info('User logged out successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
 
-            return response()->json([
-                'message' => 'Logged out successfully',
-            ]);
-        } catch (\Exception $e) {
-            Log::error('Logout failed', [
-                'user_id' => $request->user()->id ?? null,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            throw $e;
-        }
+        return response()->json([
+            'message' => 'Logged out successfully',
+        ]);
     }
 }
