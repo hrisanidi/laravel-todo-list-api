@@ -22,7 +22,6 @@ php artisan test
 ```
 
 ## Generate Documentation
-
 ```bash
 php artisan vendor:publish --provider "L5Swagger\L5SwaggerServiceProvider"
 php artisan l5-swagger:generate
@@ -61,6 +60,7 @@ php artisan queue:work
 ```bash
 php artisan serve
 ```
+http://127.0.0.1:8080/api/documentation route won't render if there are 'deprecated' errors. Use PHP 8.1 to avoid that. 
 
 ## Access
 
