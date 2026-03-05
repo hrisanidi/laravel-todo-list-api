@@ -69,7 +69,6 @@ class Handler extends ExceptionHandler
         $context = [
             'exception_class' => get_class($e),
             'message' => $e->getMessage(),
-            'trace' => $e->getTraceAsString(),
             'file' => $e->getFile(),
             'line' => $e->getLine(),
         ];
